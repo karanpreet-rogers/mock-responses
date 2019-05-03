@@ -60,6 +60,10 @@ a { text-decoration: none }
 .tooltip:hover .tooltiptext {
   visibility: visible;
 }
+
+.checkbox-column {
+  text-align: center;
+}
 </style>
 
 <script>
@@ -106,6 +110,76 @@ a { text-decoration: none }
       .then(json => window.location.reload())
       .catch(error => alert(error));
   }
+
+  function addLabel() {
+    var array = [];
+    var checkboxes = document.querySelectorAll('input[name="label"]')
+    for (var i = 0; i < checkboxes.length; i++) {
+      if(checkboxes[i].checked) {
+        array.push(checkboxes[i].parentElement.title);
+      }
+    }
+    var label = document.querySelector("input[name=labeltext]").value;
+    var values = {};
+    values.ids = array;
+    window.fetch(`/developer/addlabel/${label}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values)
+    }).then(resp => window.location.reload())
+      .catch(error => alert(error));
+  }
+
+  function removeLabel() {
+    var array = [];
+    var checkboxes = document.querySelectorAll('input[name="label"]')
+    for (var i = 0; i < checkboxes.length; i++) {
+      if(checkboxes[i].checked) {
+        array.push(checkboxes[i].parentElement.title);
+      }
+    }
+    var label = document.querySelector("input[name=labeltext]").value;
+    var values = {};
+    values.ids = array;
+    window.fetch(`/developer/removelabel/${label}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values)
+    }).then(resp => window.location.reload())
+      .catch(error => alert(error));
+  }
+
+  function renameLabel() {
+    var old = document.querySelector("input[name=hiddenlabel]").value;
+    var array = [];
+    var checkboxes = document.querySelectorAll('input[name="label"]')
+    for (var i = 0; i < checkboxes.length; i++) {
+      if(checkboxes[i].checked) {
+        array.push(checkboxes[i].parentElement.title);
+      }
+    }
+    var label = document.querySelector("input[name=labeltext]").value;
+    var values = {};
+    values.ids = array;
+    values.oldval = old;
+    window.fetch(`/developer/renamelabel/${label}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values)
+    }).then(resp => window.location.reload())
+      .catch(error => alert(error));
+  }
+
+  function highlight(label) {
+    document.querySelector("input[name=hiddenlabel]").value = label;
+    const labels = document.querySelectorAll('.name-column');
+    const checkboxes = document.querySelectorAll('.checkbox-column');
+    for (var i=0; i < labels.length; i++) {
+      if (labels[i] && labels[i].innerText.indexOf(label) !== -1) {
+        checkboxes[i-1].querySelector('input').checked = 'checked';
+      }
+    }
+  }
   
   setTimeout(() => {
     const tooltipEls = document.getElementsByClassName('tooltiptext');
@@ -114,7 +188,7 @@ a { text-decoration: none }
     }
   }, 1000);
 </script>
-
+<input name="hiddenlabel" style="display:none;"></input>
 <div class="mock-responses">
   The following pattern-matcing requests are intercepted and served by Mock Responses.
   <div id="mock-responses-data">
@@ -125,10 +199,29 @@ a { text-decoration: none }
       </mce-button>
     </a>
     <mce-search class="mce-search mce-visible" on-search="search(keyword)"></mce-search>
+  </br>
+    <mce-text-field  class="label-text" label="Label"
+      name="labeltext"
+      optional="(optional)"
+      helper-text="Label to represent this mock response">
+    </mce-text-field>
+    
+    <mce-button class="mce-dark" onclick="addLabel()">
+      Add Label
+    </mce-button>
+    
+    <mce-button class="mce-dark" onclick="removeLabel()">
+      Remove Label
+    </mce-button>
+
+    <mce-button class="mce-dark" onclick="renameLabel()">
+        Rename Label
+      </mce-button>
 
     <table class="data">
       <tr>
-        <th class="name-column">Name</th>
+          <th></th>
+        <th class="name-column">Labels</th>
         <th>Active</th>
         <th class="url-column">URL</th>
         <th>Type</th>
@@ -136,7 +229,19 @@ a { text-decoration: none }
       </tr>
     <% data.forEach(el => { %>
       <tr>
-        <td class="name-column"><%= el.name || ''%></td>
+
+          <td class="checkbox-column"><mce-checkbox class="label" name="label" title="<%= el.id%>"></mce-checkbox>
+          </td>
+        <td class="name-column">
+          
+          <!-- <%= el.name || ''%> -->
+          <% var xx = (el.name || '').replace(/\s+/g, ' ').split(' ') %>
+
+          <% for(var i = 0; i < xx.length ; i++) { %>
+            <span onclick="highlight('<%= xx[i]%>')"><%= xx[i] %></span>
+          <% } %>
+        </td>
+        
         <td>&nbsp;
           <a href="#mock-responses" onclick="toggle(<%= el.id%>)">
             <mce-switch <%= el.active ? 'checked' : '' %>></mce-switch>

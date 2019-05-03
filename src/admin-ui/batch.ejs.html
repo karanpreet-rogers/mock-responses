@@ -7,7 +7,6 @@
 </style>
 <script>
   function activateByName(name) {
-
     window.fetch(`/developer/activate/${name}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' }
@@ -17,21 +16,56 @@
 
 </script>
 <div class="batch-update">
+  <% var arr=[];  %>
+  <% var x = data.filter(el => el.name && el.name !== '')
+    .forEach(el => { 
+      el.name.replace(/\s+/g, ' ').split(' ').forEach(label => {
+      if (arr.indexOf(label) === -1) {
+        arr.push(label);
+      }
+    });
+  }); %>
+
+  <table>
+    <tr>
+      <th>Name</th>
+      <th>Turn On</th>
+    </tr>
+    <% var arr=[];  %>
+    <% var x = data.filter(el => el.name && el.name !== '')
+      .forEach(el => { 
+        el.name.replace(/\s+/g, ' ').split(' ').filter(el => el)
+        .forEach(label => {
+        if (arr.indexOf(label) === -1) {
+          arr.push(label); %>
+          <tr>
+            <td><%= label? label.trim() : 'empty-name' %></td>
+              <td>
+                <a href="#mock-responses" onclick="activateByName('<%= label.trim()%>')">
+                    <mce-switch name="qq" ></mce-switch>
+                </a>
+              </td>
+            </tr>
+          <% }
+        });
+      }); %>
+    </table>
   <form>
-<table>
+<!-- <table>
   <tr>
     <th>Name</th>
     <th>Turn On</th>
   </tr>
-  <% data.filter(el => el.name).forEach(el => { %>
-    <tr><td><%= el.name? el.name : 'empty-name' %></td>
+  <% data.filter(el => el.name !== null && el.name !== '').forEach(el => { %>
+    <tr>
+      <td><%= el.name? el.name.trim() : 'empty-name' %></td>
         <td>
-            <a href="#mock-responses" onclick="activateByName('<%= el.name%>')">
+            <a href="#mock-responses" onclick="activateByName('<%= el.name.trim()%>')">
                 <mce-switch name="qq" ></mce-switch>
             </a>
         </td>
     </tr>
   <% }); %>
-</table>
+</table> -->
 </form>
 </div>

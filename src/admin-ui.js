@@ -69,9 +69,26 @@ function isFunc(code) {
 }
 
 function activateByName(key) {
-  let activateSql = `UPDATE mock_responses SET active = '1' WHERE name like '${key}'`;
-  const deactivateSql = `UPDATE mock_responses SET active = 0 WHERE name <> '' AND name NOT LIKE '${key}'`;
+  let activateSql = `UPDATE mock_responses SET active = '1' WHERE name like '%${key}%'`;
+  const deactivateSql = `UPDATE mock_responses SET active = 0 WHERE name <> '' AND name NOT LIKE '%${key}%'`;
   return db.exec(activateSql) && db.exec(deactivateSql);
+}
+
+function addLabel(label, name1) {
+  let changeSql = `UPDATE mock_responses SET name =  IFNULL(name,'') || ' ${name1}' WHERE id IN (${label.ids.toString()})`;
+  // let changeSql = `UPDATE mock_responses SET name = coalesce(nullif(name,'') || ' ${name1}') WHERE id IN (${label.ids.toString()})`;
+  return db.exec(changeSql);
+}
+
+function removeLabel(label, name1) {
+  let changeSql = `UPDATE mock_responses SET name = REPLACE(name, '${name1}', '') WHERE id IN (${label.ids.toString()})`;
+  return db.exec(changeSql);
+}
+
+function renamelabel(label, newval) {
+  var old = label.oldval;
+  let changeSql = `UPDATE mock_responses SET name = REPLACE(name, '${old}', '${newval}') WHERE id IN (${label.ids.toString()})`;
+  return db.exec(changeSql);
 }
 
 function getMockResponses(key) {
@@ -221,7 +238,8 @@ var adminUIMiddleware = function(req, res, next) {
         if (req.method == 'PUT') {    // update
           resp = activateMockResponse(id);
         }
-      }
+      } 
+
 
       if (reqUrl.pathname.match(/proxy-responses$/)) {
         if (req.method == 'POST') { // create
@@ -282,6 +300,27 @@ var adminUIMiddleware = function(req, res, next) {
         const name = (reqUrl.pathname.match(/^\/developer\/activate\/([0-9a-zA-Z\-]+)/) || [])[1];
         activateByName(name);
         html = 'successfully activated';
+      } else if (reqUrl.pathname.match(/^\/developer\/addlabel/)) {
+        const name = (reqUrl.pathname.match(/^\/developer\/addlabel\/([0-9a-zA-Z\-]+)/) || [])[1];
+        if (req.method == 'POST') {    // update
+          addLabel(req.body, name);
+          html = 'successfully activated';
+          // resp = '{ "hello": 2 }';
+        }
+      } else if (reqUrl.pathname.match(/^\/developer\/renamelabel/)) {
+        const name = (reqUrl.pathname.match(/^\/developer\/renamelabel\/([0-9a-zA-Z\-]+)/) || [])[1];
+        if (req.method == 'POST') {    // update
+          renamelabel(req.body, name);
+          html = 'successfully activated';
+          // resp = '{ "hello": 2 }';
+        }
+      } else if (reqUrl.pathname.match(/^\/developer\/renamelabel/)) {
+        const name = (reqUrl.pathname.match(/^\/developer\/renamelabel\/([0-9a-zA-Z\-]+)/) || [])[1];
+        if (req.method == 'POST') {    // update
+          renamelabel(req.body, name);
+          html = 'successfully activated';
+          // resp = '{ "hello": 2 }';
+        }
       } else {
         html = '404 Not Found';
       }
